@@ -1,0 +1,20 @@
+{
+  "name": "chancearthur/kirby-exifandresize",
+  "description": "Strip EXIF data to a content file and resize your photos",
+  "license": "MIT",
+  "type": "kirby-plugin",
+  "authors": [
+    {
+      "name": "Chance Arthur",
+      "homepage": "https://chancearthur.com"
+    }
+  ],
+  "require": {
+    "getkirby/composer-installer": "^1.1"
+  },
+  "config": {
+    "allow-plugins": {
+      "getkirby/composer-installer": true
+    }
+  }
+}
