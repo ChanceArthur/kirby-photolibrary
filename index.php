@@ -1,17 +1,18 @@
 <?php
+use Kirby\Cms\App as Kirby;
+
+load([
+  'PhotosPage' => 'models/Photos.php',
+  'PhotoPage' => 'models/Photo.php',
+], __DIR__);
+
 function processImages($file) {
 
   // Is it an image?
   if($file->isResizable()) {
 
     // Should we preserve EXIF data?
-    /*
-      NEEDS WORK:
-      I would prefer to have this check for EXIF data, rather than a template.
-      I couldn't get it to function properly.
-      Please open a pull request if you can help. Thanks!
-    */
-    $template = option('chancearthur.exifAndResize.template');
+    $template = option('chancearthur.photoLibrary.template');
     if ($file->template() === $template) {
 
       // Copy EXIF data before it gets stripped
@@ -19,14 +20,8 @@ function processImages($file) {
         $newFile = $file->update([
           // Not necessary to include "Apple" in the camera tag
           'camera'      => $file->exif()->camera()->make() === 'Apple' ? $file->exif()->camera()->model() : $file->exif()->camera(),
-          /*
-            NEEDS WORK:
-            Geo currently writes 'null' to the content file if location is null.
-            Would prefer that it write nothing at all.
-            Please open a pull request if you can help. Thanks!
-          */
           'geo'         => $file->exif()->location()->lat() === null ?: $file->exif()->location()->toArray(),
-          'timestamp'   => $file->exif()->timestamp(),
+          'date'        => date('Y-m-d H:i:s', $file->exif()->timestamp()),
           'exposure'    => $file->exif()->exposure(),
           'aperture'    => $file->exif()->aperture(),
           'iso'         => $file->exif()->iso(),
@@ -36,11 +31,19 @@ function processImages($file) {
       catch (Exception $e) {
         throw new Exception($e->getMessage());
       }
+
+      // Rename file based on timestamp
+      try {
+        $file = $file->changeName(date('ymd-His', $file->exif()->timestamp()));
+      }
+      catch (Exception $e) {
+        throw new Exception($e->getMessage());
+      }
     }
 
     // Limit longest edge to this value
-    $maxSize = option('chancearthur.exifAndResize.maxSize');
-    $quality = option('chancearthur.exifAndResize.quality');
+    $maxSize = option('chancearthur.photoLibrary.maxSize');
+    $quality = option('chancearthur.photoLibrary.quality');
 
     try {
       kirby()->thumb($file->root(), $file->root(), [
@@ -56,12 +59,7 @@ function processImages($file) {
   }
 }
 
-Kirby::plugin('chancearthur/exifAndResize', [
-  'options' => [
-    'template' => 'photo',
-    'maxSize'  => 1024,
-    'quality'  => 100,
-  ],
+Kirby::plugin('chancearthur/photoLibrary', [
   'hooks' => [
     'file.create:after'  => function ($file) {
       processImages($file);
@@ -69,5 +67,14 @@ Kirby::plugin('chancearthur/exifAndResize', [
     'file.replace:after' => function ($newFile, $oldFile) {
       processImages($newFile);
     }
+  ],
+  'options' => [
+    'template' => 'photo',
+    'maxSize'  => 1024,
+    'quality'  => 100,
+  ],
+  'pageModels' => [
+    'photos' => 'PhotosPage',
+    'photo'  => 'PhotoPage',
   ]
 ]);

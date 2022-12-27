@@ -1,5 +1,5 @@
-# Exif And Resize
+Moves EXIF into content file, resizes, renames, and generates virtual pages from photos.
 
-This plugin is the result of a lot of frustration with the way Kirby handles files.
+This plugin is very opinionated and will change without notice. Clone to your project if you want to use it.
 
-An actual README will be published later.
+Focus field requires Kirby Focus.
